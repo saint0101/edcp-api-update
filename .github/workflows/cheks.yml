@@ -25,7 +25,7 @@
           # Ajoutez cette étape pour afficher les informations sur la connexion.
           - name: Display Docker Hub Connection Info  # nom d el'etape
             run: | 
-              echo "Logged in as: $DOCKER_USERNAME". 
+              echo "Logged in as: $DOCKER_USERNAME"
               echo "Docker token: $DOCKER_TOKEN"
             env:  # Variables d'environnement
               DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USER }} # Nom d'utilisateur Docker Hub
