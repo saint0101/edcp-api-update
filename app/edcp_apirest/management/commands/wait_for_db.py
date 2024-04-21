@@ -5,12 +5,12 @@ import time
 
 from psycopg2 import OperationalError as Psycopg2OpError
 
-from django.db.utils import OperationalError
+from django.db import OperationalError
 from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
-    """Commande Django pour attendre la base de données."""
+    """Commande Django pour attendre que la base de données soit disponible."""
 
     def handle(self, *args, **options):
         """
