@@ -37,7 +37,7 @@
         
             # Étape d'exécution des tests
           - name: Test
-            run: docker-compose run --rm app sh -c "python manage.py test" # Exécution des tests via docker-compose
+            run: docker-compose run --rm app sh -c "python manage.py wait_for_db && python manage.py test" # Exécution de l'attente du demarrage de la bd et ensuite des tests via docker-compose
 
             # Étape de vérification du linting
           - name: Lint
