@@ -9,6 +9,9 @@ from django.contrib.auth import get_user_model  # Importe la fonction get_user_m
 from rest_framework.test import APIClient  # Importe la classe APIClient pour les tests de l'API REST
 from rest_framework import status  # Importe les constantes de statut HTTP
 
+from rest_framework.authtoken.models import Token  # Assurez-vous d'importer Token correctement
+
+
 # URL pour créer un utilisateur
 CREATE_USER_URL = reverse('user:create')
 
