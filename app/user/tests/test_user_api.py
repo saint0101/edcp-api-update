@@ -12,6 +12,11 @@ from rest_framework import status  # Importe les constantes de statut HTTP
 # URL pour créer un utilisateur
 CREATE_USER_URL = reverse('user:create')
 
+# URL pour créer du token
+TOKEN_URL = reverse('user:token')
+
+# URL pour l'utilisateur
+ME_URL = reverse('user:me')
 
 def create_user(**params):
     """ Crée un nouvel utilisateur """
@@ -77,3 +82,113 @@ class PublicUserApiTests(TestCase):
             email=payload['email']
         ).exists()
         self.assertFalse(user_exists)
+
+
+    def test_create_token_for_user(self):
+        """Test la création d'un token pour un utilisateur."""
+
+        # Informations de l'utilisateur de test
+        user_details = {
+            'email': 'test@example.com',  # Email de test
+            'password': 'testpass123',     # Mot de passe de test
+            'name': 'Test Name',           # Nom de test
+        }
+
+        # Création de l'utilisateur
+        create_user(**user_details)
+
+        # Informations pour la génération du token
+        payload = {
+            'email': user_details['email'],    # Email de l'utilisateur
+            'password': user_details['password'],  # Mot de passe de l'utilisateur
+        }
+        # Envoie une requête POST pour créer le TOKEN
+        res = self.client.post(TOKEN_URL, payload)
+
+        # Vérifie la présence du token dans les données de réponse
+        self.assertIn('token', res.data)
+        # Vérifie le code de statut de la réponse
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+
+    def test_create_token_bad_credentials(self):
+        """Teste le retour d'erreur si les identifiants sont invalides."""
+        # Crée un utilisateur avec un bon mot de passe
+        create_user(email='test@example.com', password='goodpass')
+
+        # Prépare les données avec des identifiants incorrects
+        payload = {'email': 'test@example.com', 'password': 'badpass'}
+        res = self.client.post(TOKEN_URL, payload)
+
+        # Vérifie que le token n'est pas dans la réponse et que le statut de la requête est HTTP 400 (Bad Request)
+        self.assertNotIn('token', res.data)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_token_email_not_found(self):
+        """Teste le retour d'erreur si aucun utilisateur n'est trouvé pour l'e-mail donné."""
+        # Prépare les données avec un e-mail qui n'est pas associé à un utilisateur existant
+        payload = {'email': 'test@example.com', 'password': 'pass123'}
+        res = self.client.post(TOKEN_URL, payload)
+
+        # Vérifie que le token n'est pas dans la réponse et que le statut de la requête est HTTP 400 (Bad Request)
+        self.assertNotIn('token', res.data)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_token_blank_password(self):
+        """Teste le retour d'erreur si un mot de passe vide est fourni."""
+        # Prépare les données avec un mot de passe vide
+        payload = {'email': 'test@example.com', 'password': ''}
+        res = self.client.post(TOKEN_URL, payload)
+
+        # Vérifie que le token n'est pas dans la réponse et que le statut de la requête est HTTP 400 (Bad Request)
+        self.assertNotIn('token', res.data)#
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+    def test_retrieve_user_unauthorized(self):
+        """ Tester l'authorisation requi pour l'utilisateur  """
+
+        res = self.client.get(ME_URL)
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class  PrivateUserApiTests():
+    """ Tester le systeme d'hautentification pour chaque requete """
+
+    def seuUp(self):
+        """ les parametres initial des tests """
+
+        self.user = create_user(
+            email='test@exemple.com',
+            password='testpass123',
+            name='Test Name',
+        )
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_retrieve_profile_success(self):
+        """Test retrieving profile for logged in user."""
+        res = self.client.get(ME_URL)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, {
+            'name': self.user.name,
+            'email': self.user.email,
+        })
+
+    def test_post_me_not_allowed(self):
+        """Test POST is not allowed for the me endpoint."""
+        res = self.client.post(ME_URL, {})
+
+        self.assertEqual(res.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_update_user_profile(self):
+        """Test updating the user profile for the authenticated user."""
+        payload = {'name': 'Updated name', 'password': 'newpassword123'}
+
+        res = self.client.patch(ME_URL, payload)
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.name, payload['name'])
+        self.assertTrue(self.user.check_password(payload['password']))
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
