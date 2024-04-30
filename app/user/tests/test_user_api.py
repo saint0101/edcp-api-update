@@ -36,9 +36,18 @@ class PublicUserApiTests(TestCase):
     def test_create_user_success(self):
         """ Création d'un utilisateur avec succès """
         payload = {
-            'email': 'test@example.com',  # Email de test
-            'password': 'testpass123',  # Mot de passe de test
-            'name': 'Test Name',  # Nom de test
+            'login': 'test_login',  # Valeur pour le champ 'login'
+            'avatar': 'test_avatar',  # Valeur pour le champ 'avatar'
+            'name': 'Test Name',  # Valeur pour le champ 'name'
+            'password': 'testpass123', # Valeur pour le champ 'mot de passe'
+            'prenoms': 'Test Prenoms',  # Valeur pour le champ 'prenoms'
+            'organisation': 'Test Organisation',  # Valeur pour le champ 'organisation'
+            'telephone': '123456789',  # Valeur pour le champ 'telephone'
+            'fonction': 'Test Fonction',  # Valeur pour le champ 'fonction'
+            'consentement': 'Test Consentement',  # Valeur pour le champ 'consentement'
+            'email': 'test@example.com',  # Valeur pour le champ 'email'
+            'is_active': True,  # Valeur pour le champ 'is_active'
+            'is_staff': False,  # Valeur pour le champ 'is_staff'
         }
 
         res = self.client.post(CREATE_USER_URL, payload)  # Envoie une requête POST pour créer un utilisateur
